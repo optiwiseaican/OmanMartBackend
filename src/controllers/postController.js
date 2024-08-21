@@ -27,6 +27,10 @@ exports.getPostById = async (req, res) => {
 // Get a list of all posts with pagination
 exports.getAllPosts = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
+
+    console.log("hello post")
+    console.log(typeof page)
+
     try {
         const posts = await Post.find()
             .limit(limit * 1)
@@ -36,7 +40,7 @@ exports.getAllPosts = async (req, res) => {
         res.json({
             posts,
             totalPages: Math.ceil(count / limit),
-            currentPage: page
+            currentPage:  parseInt(page)
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -49,6 +53,9 @@ exports.getPostsByQuery = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     let query = {};
 
+    console.log("hello query")
+    console.log(typeof page)
+
     if (author) query.author = author;
     if (tags) query.tags = { $in: tags.split(',') };
 
@@ -58,10 +65,11 @@ exports.getPostsByQuery = async (req, res) => {
             .skip((page - 1) * limit)
             .exec();
         const count = await Post.countDocuments(query);
+        const currentPage = parseInt(page, 10);
         res.json({
             posts,
             totalPages: Math.ceil(count / limit),
-            currentPage: page
+            currentPage: currentPage
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
