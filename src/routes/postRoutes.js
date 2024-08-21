@@ -8,15 +8,16 @@ const {
     deletePostById,
     searchPosts
 } = require('../controllers/postController');
+const authenticateUser = require('../middleware/authenticateUser');  
 
 const router = express.Router();
 
-router.post('/', createPost);
+router.post('/', authenticateUser, createPost);
 router.get('/', getAllPosts);
 router.get('/search', searchPosts);
 router.get('/query', getPostsByQuery);
 router.get('/:id', getPostById);
-router.put('/:id', updatePostById);
-router.delete('/:id', deletePostById);
+router.put('/:id', authenticateUser, updatePostById);
+router.delete('/:id', authenticateUser, deletePostById);
 
 module.exports = router;
