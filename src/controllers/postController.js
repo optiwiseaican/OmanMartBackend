@@ -105,19 +105,57 @@ exports.deletePostById = async (req, res) => {
     }
 };
 
-// Search posts
+// // Search posts
+// exports.searchPosts = async (req, res) => {
+//     const { query } = req.query;
+//     try {
+//         const posts = await Post.find({
+//             $or: [
+//                 { title: { $regex: query, $options: 'i' } },
+//                 { content: { $regex: query, $options: 'i' } },
+//                 { author: { $regex: query, $options: 'i' } }
+//             ]
+//         }).exec();
+//         res.json(posts);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
+
+// Search posts with pagination
 exports.searchPosts = async (req, res) => {
-    const { query } = req.query;
+    const { query, page = 1, limit = 10 } = req.query;
+
     try {
         const posts = await Post.find({
             $or: [
                 { title: { $regex: query, $options: 'i' } },
-                { content: { $regex: query, $options: 'i' } },
-                { author: { $regex: query, $options: 'i' } }
+                { description: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } },
+                { tags: { $in: [new RegExp(query, 'i')] } }
             ]
-        }).exec();
-        res.json(posts);
+        })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+
+        const count = await Post.countDocuments({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } },
+                { tags: { $in: [new RegExp(query, 'i')] } }
+            ]
+        });
+
+        res.json({
+            posts,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page, 10),
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
