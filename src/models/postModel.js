@@ -106,6 +106,10 @@ const productDetailsSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    documents: {
+        type: [String],
+        default: []
+    },
     popularity: {
         type: Number,
         default: 0
