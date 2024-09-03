@@ -93,7 +93,7 @@ exports.searchRequirements = async (req, res) => {
     const { query, page = 1, limit = 10 } = req.query;
 
     try {
-        const posts = await Requirement.find({
+        const requirements = await Requirement.find({
             $or: [
                 { requirementTitle: { $regex: query, $options: 'i' } },
                 { category: { $regex: query, $options: 'i' } },
