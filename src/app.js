@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./configs/db');
 const errorHandler = require('./middleware/errorHandler');
 const postRoutes = require('./routes/postRoutes');
+const requirementRoutes = require('./routes/requirementRoutes');
 
 dotenv.config();
 connectDB();
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 
 app.use('/api/posts', postRoutes);
+app.use('/api/requirements', requirementRoutes);
 
 app.use(errorHandler);
 
