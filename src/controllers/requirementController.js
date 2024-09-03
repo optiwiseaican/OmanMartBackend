@@ -73,18 +73,52 @@ exports.deleteRequirementById = async (req, res) => {
 };
 
 // Search requirements
+// exports.searchRequirements = async (req, res) => {
+//     const { query } = req.query;
+//     try {
+//         const requirements = await Requirement.find({
+//             $or: [
+//                 { requirementTitle: { $regex: query, $options: 'i' } },
+//                 { industryType: { $regex: query, $options: 'i' } },
+//                 { location: { $regex: query, $options: 'i' } }
+//             ]
+//         }).exec();
+//         res.json(requirements);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
 exports.searchRequirements = async (req, res) => {
-    const { query } = req.query;
+    const { query, page = 1, limit = 10 } = req.query;
+
     try {
-        const requirements = await Requirement.find({
+        const posts = await Requirement.find({
             $or: [
                 { requirementTitle: { $regex: query, $options: 'i' } },
-                { industryType: { $regex: query, $options: 'i' } },
-                { location: { $regex: query, $options: 'i' } }
+                { category: { $regex: query, $options: 'i' } },
+                { tags: { $in: [new RegExp(query, 'i')] } }
             ]
-        }).exec();
-        res.json(requirements);
+        })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+
+        const count = await Requirement.countDocuments({
+            $or: [
+                { requirementTitle: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } },
+                { tags: { $in: [new RegExp(query, 'i')] } }
+            ]
+        });
+
+        res.json({
+            requirements,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page, 10),
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
