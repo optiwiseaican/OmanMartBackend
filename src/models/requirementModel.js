@@ -3,17 +3,12 @@
 const mongoose = require('mongoose');
 
 const requirementSchema = new mongoose.Schema({
-    requirement_title: {
+    requirementTitle: {
         type: String,
         required: true,
         trim: true,
     },
-    requirement_title_lowercase: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    industry_type: {
+    industryType: {
         type: String,
         required: true,
     },
@@ -41,7 +36,7 @@ const requirementSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    posted_by: {
+    postedBy: {
         type: String,
         required: true,
     },
@@ -53,7 +48,7 @@ const requirementSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    timestamp_mod: {
+    timestampMod: {
         type: Date,
         default: Date.now,
     },
@@ -61,7 +56,7 @@ const requirementSchema = new mongoose.Schema({
         type: [String],
         default: [],
     },
-    multi_locations: {
+    multiLocations: {
         type: [String],
         default: [],
     },

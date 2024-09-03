@@ -1,5 +1,3 @@
-// src/controllers/requirementController.js
-
 const Requirement = require('../models/requirementModel');
 
 // Create a new requirement
@@ -80,8 +78,8 @@ exports.searchRequirements = async (req, res) => {
     try {
         const requirements = await Requirement.find({
             $or: [
-                { requirement_title: { $regex: query, $options: 'i' } },
-                { industry_type: { $regex: query, $options: 'i' } },
+                { requirementTitle: { $regex: query, $options: 'i' } },
+                { industryType: { $regex: query, $options: 'i' } },
                 { location: { $regex: query, $options: 'i' } }
             ]
         }).exec();
