@@ -89,28 +89,65 @@ exports.deleteRequirementById = async (req, res) => {
 //     }
 // };
 
+// exports.searchRequirements = async (req, res) => {
+//     const { query, page = 1, limit = 10 } = req.query;
+
+//     try {
+//         const requirements = await Requirement.find({
+//             $or: [
+//                 { requirementTitle: { $regex: query, $options: 'i' } },
+//                 { category: { $regex: query, $options: 'i' } },
+//                 { tags: { $in: [new RegExp(query, 'i')] } }
+//             ]
+//         })
+//         .limit(limit * 1)
+//         .skip((page - 1) * limit)
+//         .exec();
+
+//         const count = await Requirement.countDocuments({
+//             $or: [
+//                 { requirementTitle: { $regex: query, $options: 'i' } },
+//                 { category: { $regex: query, $options: 'i' } },
+//                 { tags: { $in: [new RegExp(query, 'i')] } }
+//             ]
+//         });
+
+//         res.json({
+//             requirements,
+//             totalPages: Math.ceil(count / limit),
+//             currentPage: parseInt(page, 10),
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
+
 exports.searchRequirements = async (req, res) => {
-    const { query, page = 1, limit = 10 } = req.query;
+    const { query, page = 1, limit = 10 } = req.query; // Query params
+    const { locations = [] } = req.body; // Locations in request body
 
     try {
-        const requirements = await Requirement.find({
+        // Build the base filters using the query
+        const filters = {
             $or: [
                 { requirementTitle: { $regex: query, $options: 'i' } },
                 { category: { $regex: query, $options: 'i' } },
                 { tags: { $in: [new RegExp(query, 'i')] } }
             ]
-        })
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .exec();
+        };
 
-        const count = await Requirement.countDocuments({
-            $or: [
-                { requirementTitle: { $regex: query, $options: 'i' } },
-                { category: { $regex: query, $options: 'i' } },
-                { tags: { $in: [new RegExp(query, 'i')] } }
-            ]
-        });
+        // Add location filter if locations are provided
+        if (locations.length > 0) {
+            filters.location = { $in: locations };
+        }
+
+        const requirements = await Requirement.find(filters)
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .exec();
+
+        const count = await Requirement.countDocuments(filters);
 
         res.json({
             requirements,
@@ -121,4 +158,3 @@ exports.searchRequirements = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
