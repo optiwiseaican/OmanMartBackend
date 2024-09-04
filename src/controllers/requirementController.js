@@ -139,7 +139,7 @@ exports.searchRequirements = async (req, res) => {
 
         // Add location filter if locations are provided
         if (locations.length > 0) {
-            filters.location = { $in: locations };
+            filters.multiLocations = { $in: locations };
         }
 
         const requirements = await Requirement.find(filters)
