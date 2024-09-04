@@ -16,7 +16,7 @@ const router = express.Router();
 
 router.post('/', authenticateUser, createRequirement);
 router.get('/', getAllRequirements);
-router.get('/search', searchRequirements);
+router.post('/search', searchRequirements);
 router.get('/:id', getRequirementById);
 router.put('/:id', authenticateUser, updateRequirementById);
 router.delete('/:id', authenticateUser, deleteRequirementById);
