@@ -122,32 +122,33 @@ exports.deletePostById = async (req, res) => {
 //     }
 // };
 
-
-// Search posts with pagination
+// Search posts with pagination and location filter
 exports.searchPosts = async (req, res) => {
-    const { query, page = 1, limit = 10 } = req.query;
+    const { query, page = 1, limit = 10 } = req.query; // Query params
+    const { locations = [] } = req.body; // Locations in request body
 
     try {
-        const posts = await Post.find({
+        // Build the base filters using the query
+        const filters = {
             $or: [
                 { title: { $regex: query, $options: 'i' } },
                 { description: { $regex: query, $options: 'i' } },
                 { category: { $regex: query, $options: 'i' } },
                 { tags: { $in: [new RegExp(query, 'i')] } }
             ]
-        })
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .exec();
+        };
 
-        const count = await Post.countDocuments({
-            $or: [
-                { title: { $regex: query, $options: 'i' } },
-                { description: { $regex: query, $options: 'i' } },
-                { category: { $regex: query, $options: 'i' } },
-                { tags: { $in: [new RegExp(query, 'i')] } }
-            ]
-        });
+        // Add location filter if locations are provided
+        if (locations.length > 0) {
+            filters.multiLocations = { $in: locations };
+        }
+
+        const posts = await Post.find(filters)
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .exec();
+
+        const count = await Post.countDocuments(filters);
 
         res.json({
             posts,
@@ -158,4 +159,6 @@ exports.searchPosts = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
 

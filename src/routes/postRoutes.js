@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post('/', authenticateUser, createPost);
 router.get('/', getAllPosts);
-router.get('/search', searchPosts);
+router.post('/search', searchPosts);
 router.get('/query', getPostsByQuery);
 router.get('/:id', getPostById);
 router.put('/:id', authenticateUser, updatePostById);
