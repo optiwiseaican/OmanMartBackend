@@ -1,16 +1,5 @@
 const mongoose = require('mongoose');
 
-const postTableSchema = new mongoose.Schema({
-    left: {
-        type: String,
-        required: true,
-    },
-    right: {
-        type: String,
-        required: true,
-    },
-});
-
 const productDetailsSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -133,10 +122,10 @@ const productDetailsSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    postTable: {
-        type: [postTableSchema], // Embedding the postDetails schema as an array
-        default: [],
-    }
+    postTable: [{
+        left: { type: String, required: true },
+        right: { type: String, required: true }
+    }] // Directly define the array of subdocuments
 }, { timestamps: true });
 
 const ProductDetails = mongoose.model('Posts', productDetailsSchema);
