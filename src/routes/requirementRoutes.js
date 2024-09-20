@@ -2,23 +2,28 @@
 
 const express = require('express');
 const {
-    createRequirement,
-    getRequirementById,
-    getAllRequirements,
-    updateRequirementById,
-    deleteRequirementById,
-    searchRequirements
+  createRequirement,
+  getRequirementById,
+  getAllRequirements,
+  updateRequirementById,
+  deleteRequirementById,
+  searchRequirements,
 } = require('../controllers/requirementController');
 
 const authenticateUser = require('../middleware/authenticateUser');
 
 const router = express.Router();
 
-router.post('/', authenticateUser, createRequirement);
-router.get('/', getAllRequirements);
-router.post('/search', searchRequirements);
-router.get('/:id', getRequirementById);
-router.put('/:id', authenticateUser, updateRequirementById);
-router.delete('/:id', authenticateUser, deleteRequirementById);
+router
+  .route('/')
+  .get(getAllRequirements)
+  .post(authenticateUser, createRequirement);
+
+router.route('/search').post(searchRequirements);
+router
+  .route('/:id')
+  .get(getRequirementById)
+  .put(authenticateUser, updateRequirementById)
+  .delete(authenticateUser, deleteRequirementById);
 
 module.exports = router;

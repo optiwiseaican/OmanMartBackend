@@ -2,114 +2,107 @@ const Post = require('../models/postModel');
 
 // Create a new post
 exports.createPost = async (req, res) => {
-    try {
-        const post = new Post({
-            ...req.body,
-            postTable: req.body.postTable || [],
-          });
+  try {
+    const post = new Post({
+      ...req.body,
+      postTable: req.body.postTable || [],
+    });
 
-        const savedPost = await post.save();
-        res.status(201).json(savedPost);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+    const savedPost = await post.save();
+    res.status(201).json(savedPost);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
 // Get a post by ID
 exports.getPostById = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-        res.json(post);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // Get a list of all posts with pagination
 exports.getAllPosts = async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10 } = req.query;
 
-    console.log("hello post")
-    console.log(typeof page)
-
-    try {
-        const posts = await Post.find()
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .exec();
-        const count = await Post.countDocuments();
-        res.json({
-            posts,
-            totalPages: Math.ceil(count / limit),
-            currentPage:  parseInt(page)
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const posts = await Post.find()
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+    const count = await Post.countDocuments();
+    res.json({
+      posts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // Get a list of posts with query and pagination
 exports.getPostsByQuery = async (req, res) => {
-    const { author, tags } = req.query;
-    const { page = 1, limit = 10 } = req.query;
-    let query = {};
+  const { author, tags } = req.query;
+  const { page = 1, limit = 10 } = req.query;
+  const query = {};
 
-    console.log("hello query")
-    console.log(typeof page)
+  if (author) query.author = author;
+  if (tags) query.tags = { $in: tags.split(',') };
 
-    if (author) query.author = author;
-    if (tags) query.tags = { $in: tags.split(',') };
-
-    try {
-        const posts = await Post.find(query)
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .exec();
-        const count = await Post.countDocuments(query);
-        const currentPage = parseInt(page, 10);
-        res.json({
-            posts,
-            totalPages: Math.ceil(count / limit),
-            currentPage: currentPage
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const posts = await Post.find(query)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+    const count = await Post.countDocuments(query);
+    const currentPage = parseInt(page, 10);
+    res.json({
+      posts,
+      totalPages: Math.ceil(count / limit),
+      currentPage,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // Update a post by ID
 exports.updatePostById = async (req, res) => {
-    try {
+  try {
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, postTable: req.body.postTable },
+      { new: true, runValidators: true }
+    );
 
-        const post = await Post.findByIdAndUpdate(
-            req.params.id,
-            { ...req.body, postTable: req.body.postTable },
-            { new: true, runValidators: true }
-        );
-
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-        res.json(post);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
+    res.json(post);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
 // Delete a post by ID
 exports.deletePostById = async (req, res) => {
-    try {
-        const post = await Post.findByIdAndDelete(req.params.id);
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-        res.json({ message: 'Post deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const post = await Post.findByIdAndDelete(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // // Search posts
@@ -131,41 +124,32 @@ exports.deletePostById = async (req, res) => {
 
 // Search posts with pagination and location filter
 exports.searchPosts = async (req, res) => {
-    const { query, page = 1, limit = 10 } = req.query; // Query params
-    const { locations = [] } = req.body; // Locations in request body
+  const { query, page = 1, limit = 10 } = req.query; // Query params
+  const { locations = [] } = req.body; // Locations in request body
 
-    try {
-        // Build the base filters using the query
-        const filters = {
-            $or: [
-                { title: { $regex: query, $options: 'i' } },
-                { description: { $regex: query, $options: 'i' } },
-                { category: { $regex: query, $options: 'i' } },
-                { tags: { $in: [new RegExp(query, 'i')] } }
-            ]
-        };
+  try {
+    // Build the base filters using the query
+    const filters = { $text: { $search: query } };
 
-        // Add location filter if locations are provided
-        if (locations.length > 0) {
-            filters.multiLocations = { $in: locations };
-        }
-
-        const posts = await Post.find(filters)
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .exec();
-
-        const count = await Post.countDocuments(filters);
-
-        res.json({
-            posts,
-            totalPages: Math.ceil(count / limit),
-            currentPage: parseInt(page, 10),
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    // Add location filter if locations are provided
+    if (locations.length > 0) {
+      filters.multiLocations = { $in: locations };
     }
+
+    const posts = await Post.find(filters, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const count = await Post.countDocuments(filters);
+
+    res.json({
+      posts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
-
-
-
