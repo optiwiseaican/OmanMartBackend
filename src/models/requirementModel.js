@@ -1,70 +1,73 @@
-// src/models/requirementModel.js
-
 const mongoose = require('mongoose');
 
-const requirementSchema = new mongoose.Schema({
+const requirementSchema = new mongoose.Schema(
+  {
     requirementTitle: {
-        type: String,
-        required: true,
-        trim: true,
+      type: String,
+      required: true,
+      trim: true,
     },
     industryType: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     currency: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     budget: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     location: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     city: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     pincode: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     timeline: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     postedBy: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     tags: {
-        type: [String],
-        default: [],
+      type: [String],
+      default: [],
     },
     timestamp: {
-        type: Date,
-        default: Date.now,
+      type: Date,
+      default: Date.now,
     },
     timestampMod: {
-        type: Date,
-        default: Date.now,
+      type: Date,
+      default: Date.now,
     },
     category: {
-        type: [String],
-        default: [],
+      type: [String],
+      default: [],
     },
     multiLocations: {
-        type: [String],
-        default: [],
+      type: [String],
+      default: [],
     },
     images: {
-        type: [String],
-        default: [],
+      type: [String],
+      default: [],
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
+
+requirementSchema.index({ requirementTitle: 'text' });
 
 const Requirement = mongoose.model('Requirement', requirementSchema);
 

@@ -1,0 +1,6 @@
+{
+  "**/*.js": [
+    "eslint . --ext js --report-unused-disable-directives --max-warnings 0",
+    "prettier --write"
+  ]
+}
