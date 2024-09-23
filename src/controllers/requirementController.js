@@ -1,4 +1,5 @@
 const Requirement = require('../models/requirementModel');
+const Product = require('../models/postModel');
 
 // Create a new requirement
 exports.createRequirement = async (req, res) => {
@@ -158,3 +159,50 @@ exports.searchRequirements = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+// Get relevant requirements for a seller based on their posted products
+exports.getSellerRelevantRequirements = async (req, res) => {
+  const sellerId = req.params.userId; // Seller's userId passed as a route parameter
+
+  try {
+    // Fetch all products posted by this seller
+    const sellerProducts = await Product.find({ postedBy: sellerId });
+
+    if (!sellerProducts || sellerProducts.length === 0) {
+      return res.status(404).json({ message: 'No products found for this seller' });
+    }
+
+    // Combine all product titles into a single search string
+    const searchString = sellerProducts.map((product) => product.title).join(' ');
+
+    // Create a filter for text search based on titles only
+    const filters = {
+      $text: { $search: searchString }
+    };
+
+    const { page = 1, limit = 10 } = req.query;
+
+    // Find buyer requirements matching seller's product titles
+    const requirements = await Requirement.find(filters, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } }) // Sort by textScore for relevance
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Count total matching requirements
+    const count = await Requirement.countDocuments(filters);
+
+    // Return the matching requirements with pagination
+    res.json({
+      requirements,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
