@@ -7,6 +7,7 @@ const {
   updatePostById,
   deletePostById,
   searchPosts,
+  userFeed,
 } = require('../controllers/postController');
 const authenticateUser = require('../middleware/authenticateUser');
 
@@ -20,5 +21,7 @@ router
   .get(getPostById)
   .put(authenticateUser, updatePostById)
   .delete(authenticateUser, deletePostById);
+
+router.get('/user-feed/:userId', userFeed);
 
 module.exports = router;

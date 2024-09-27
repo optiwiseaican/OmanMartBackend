@@ -1,4 +1,5 @@
 const Post = require('../models/postModel');
+const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -151,5 +152,58 @@ exports.searchPosts = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.userFeed = async (req, res) => {
+  try {
+    const sellerId = req.params.userId;
+
+    // last search records
+    const firestoreDB = getFirestore();
+    const userPreferences = firestoreDB.collection('user_preferences').doc(sellerId);
+    const doc = await userPreferences.get();
+
+    // Pagination query parameters
+    const { page = 1, limit = 10 } = req.query;
+
+    if (doc.exists) {
+      const lastSearch = doc.data().last_search;
+
+      if (Array.isArray(lastSearch)) {
+
+        const searchString = lastSearch.map((searchTerm) => searchTerm).join(' ');
+
+        const filters = {
+          $text: { $search: searchString }
+        };
+
+        const posts = await Post.find(filters, { score: { $meta: 'textScore' } })
+          .sort({ score: { $meta: 'textScore' } }) 
+          .limit(limit * 1) 
+          .skip((page - 1) * limit) 
+          .exec();
+
+        const count = await Post.countDocuments(filters);
+
+        res.json({
+          posts,
+          totalPages: Math.ceil(count / limit),
+          currentPage: parseInt(page, 10),
+        });
+      } else {
+        res.json({
+          "data": "last_search is not an array",
+        });
+      }
+    } else {
+      res.json({
+        "data": "no data available",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
