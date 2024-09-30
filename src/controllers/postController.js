@@ -197,8 +197,19 @@ exports.userFeed = async (req, res) => {
         });
       }
     } else {
+       // If the document does not exist, return posts in a random manner
+       const posts = await Post.aggregate([
+        {
+          $sample: { size: parseInt(limit) } // Randomly select 'limit' number of posts
+        }
+      ]);
+
+      const count = await Post.countDocuments({}); // Count all posts
+
       res.json({
-        "data": "no data available",
+        posts,
+        totalPages: Math.ceil(count / limit),
+        currentPage: parseInt(page, 10),
       });
     }
   } catch (error) {
@@ -207,3 +218,8 @@ exports.userFeed = async (req, res) => {
     });
   }
 };
+
+
+
+
+
