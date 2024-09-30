@@ -1,5 +1,7 @@
 const Requirement = require('../models/requirementModel');
 const Product = require('../models/postModel');
+const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
+const Post = require('../models/postModel');
 
 // Create a new requirement
 exports.createRequirement = async (req, res) => {
@@ -206,3 +208,121 @@ exports.getSellerRelevantRequirements = async (req, res) => {
 };
 
 
+exports.requirementFeed = async (req, res) => {
+  try {
+    const sellerId = req.params.userId;
+
+    // last search records from Firestore
+    const firestoreDB = getFirestore();
+    const userPreferences = firestoreDB.collection('user_preferences').doc(sellerId);
+    const doc = await userPreferences.get();
+
+    // Pagination query parameters
+    const { page = 1, limit = 10 } = req.query;
+
+    if (doc.exists) {
+      const lastSearch = doc.data().last_search;
+
+      if (Array.isArray(lastSearch)) {
+
+        // Create search string from the last_search array
+        const searchString = lastSearch.map((searchTerm) => searchTerm).join(' ');
+
+        // Use MongoDB's text search to filter requirements based on the search string
+        const filters = {
+          $text: { $search: searchString }
+        };
+
+        // Find matching requirements, sorted by textScore
+        const requirements = await Requirement.find(filters, { score: { $meta: 'textScore' } })
+          .sort({ score: { $meta: 'textScore' } }) // Sort by relevance based on textScore
+          .limit(limit * 1) // Pagination: limit the number of results
+          .skip((page - 1) * limit) // Pagination: skip documents for previous pages
+          .exec();
+
+        // Count total matching requirements for pagination
+        const count = await Requirement.countDocuments(filters);
+
+        // Return the matching requirements with pagination info
+        res.json({
+          requirements,
+          totalPages: Math.ceil(count / limit),
+          currentPage: parseInt(page, 10),
+        });
+      } else {
+        res.json({
+          "data": "last_search is not an array",
+        });
+      }
+    } else {
+      // If the document does not exist, return requirements in a random manner
+      const requirements = await Requirement.aggregate([
+        {
+          $sample: { size: parseInt(limit) } // Randomly select 'limit' number of requirements
+        }
+      ]);
+
+      const count = await Requirement.countDocuments({}); // Count all requirements
+
+      // Return random requirements along with pagination info
+      res.json({
+        requirements,
+        totalPages: Math.ceil(count / limit),
+        currentPage: parseInt(page, 10),
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+exports.getRelevantRequirementsForPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    // Fetch the post by postId
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Use the post's title and category for the search
+    // const searchString = `${post.title} ${post.category.join(' ')}`;
+
+    const searchString = `${post.title}`;
+
+
+    // Pagination query parameters
+    const { page = 1, limit = 10 } = req.query;
+
+    // Create a text search filter using the post's title and category
+    const filters = {
+      $text: { $search: searchString }
+    };
+
+    // Find relevant requirements based on the post's title and category
+    const requirements = await Requirement.find(filters, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } }) // Sort by relevance based on textScore
+      .limit(limit * 1) // Pagination: limit the number of results
+      .skip((page - 1) * limit) // Pagination: skip documents for previous pages
+      .exec();
+
+    // Count total matching requirements for pagination
+    const count = await Requirement.countDocuments(filters);
+
+    // Return the relevant requirements along with pagination info
+    res.json({
+      requirements,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};

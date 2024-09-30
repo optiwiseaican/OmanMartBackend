@@ -1,5 +1,6 @@
 const Post = require('../models/postModel');
 const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
+const Requirement = require('../models/requirementModel');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -49,21 +50,30 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-// Get a list of posts with query and pagination
 exports.getPostsByQuery = async (req, res) => {
-  const { author, tags } = req.query;
+  const { postedBy, tags } = req.query; // Adjusting to postedBy
   const { page = 1, limit = 10 } = req.query;
   const query = {};
 
-  if (author) query.author = author;
-  if (tags) query.tags = { $in: tags.split(',') };
+  // Use the 'postedBy' field instead of 'author' for filtering by userId
+  if (postedBy) query.postedBy = postedBy;
+
+  // Handle tags filtering if provided
+  if (tags) {
+    query.tags = { $in: tags.split(',') };
+  }
 
   try {
+    // Find posts matching the query, apply pagination
     const posts = await Post.find(query)
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .exec();
+
+    // Count the total number of matching posts
     const count = await Post.countDocuments(query);
+
+    // Return the results along with pagination data
     const currentPage = parseInt(page, 10);
     res.json({
       posts,
@@ -74,6 +84,7 @@ exports.getPostsByQuery = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Update a post by ID
 exports.updatePostById = async (req, res) => {
@@ -218,7 +229,6 @@ exports.userFeed = async (req, res) => {
     });
   }
 };
-
 
 
 

@@ -8,7 +8,9 @@ const {
   updateRequirementById,
   deleteRequirementById,
   searchRequirements,
-  getSellerRelevantRequirements
+  getSellerRelevantRequirements,
+  requirementFeed,
+  getRelevantRequirementsForPost
 } = require('../controllers/requirementController');
 
 const authenticateUser = require('../middleware/authenticateUser');
@@ -29,6 +31,9 @@ router
   .delete(authenticateUser, deleteRequirementById);
 
 router.get('/relevant-requirements/:userId', authenticateUser, getSellerRelevantRequirements);
+
+router.get('/requirement-feed/:userId', requirementFeed);
+router.get('/req-for-this-post/:postId', getRelevantRequirementsForPost)
 
 
 module.exports = router;
